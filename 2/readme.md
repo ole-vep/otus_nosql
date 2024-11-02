@@ -20,7 +20,7 @@ sudo apt-get install -y mongodb-org
 
 ```bash
 ~# cd neelabalan/
-root@dvtest-dbc001lk:~/neelabalan# ./script.sh localhost 27017
+~/neelabalan# ./script.sh localhost 27017
 
 ~# mongosh --port 27017
 ```
@@ -72,7 +72,7 @@ sample_training> db.stats()
 ```
 #### 3. Запросы
 
-Поработаем с коллекцией компаний, выберем значения, количество с оффисами в России и примеры компаний с оффисами в Москве
+Поработаем с коллекцией компаний, выберем количество компаний с оффисами в России и примеры с оффисами в Москве
 ```javascript
 sample_training> db.companies.countDocuments({'offices.country_code' : 'RUS'})
 26
