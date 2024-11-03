@@ -1,7 +1,7 @@
 #### 1. Установка
 Развернута машина с OS Ubuntu 22.04
 
-Установлено по инструкции с офф сайта [MongoDB Community Edition](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/) последней версии
+Установлено по инструкции с офф сайта [MongoDB Community Edition](https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/) последней версии (8.0.3)
 
 ```bash
 sudo apt-get install gnupg curl
@@ -14,6 +14,18 @@ echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gp
 
 sudo apt-get update
 sudo apt-get install -y mongodb-org
+
+~# dpkg -l | grep mongo
+ii  mongodb-database-tools           100.10.0     amd64        mongodb-database-tools package provides tools for working with the MongoDB server:
+ii  mongodb-mongosh                  2.3.3        amd64        MongoDB Shell CLI REPL Package
+ii  mongodb-org                      8.0.3        amd64        MongoDB open source document-oriented database system (metapackage)
+ii  mongodb-org-database             8.0.3        amd64        MongoDB open source document-oriented database system (metapackage)
+ii  mongodb-org-database-tools-extra 8.0.3        amd64        Extra MongoDB database tools
+ii  mongodb-org-mongos               8.0.3        amd64        MongoDB sharded cluster query router
+ii  mongodb-org-server               8.0.3        amd64        MongoDB database server
+ii  mongodb-org-shell                8.0.3        amd64        MongoDB shell client
+ii  mongodb-org-tools                8.0.3        amd64        MongoDB tools
+
 ```
 #### 2. Заполнение данными
 Наполним коллекцию [готовыми сэмплами](https://github.com/neelabalan/mongodb-sample-dataset)
@@ -41,17 +53,6 @@ sample_weatherdata    2.52 MiB
 test> use sample_training
 switched to db sample_training
 
-sample_training> show collections
-companies
-grades
-inspections
-posts
-routes
-stories
-trips
-tweets
-zips
-
 sample_training> db.stats()
 {
   db: 'sample_training',
@@ -69,6 +70,17 @@ sample_training> db.stats()
   fsTotalSize: 31024283648,
   ok: 1
 }
+
+sample_training> show collections
+companies
+grades
+inspections
+posts
+routes
+stories
+trips
+tweets
+zips
 ```
 #### 3. Запросы
 
@@ -128,7 +140,7 @@ sample_training> db.companies.insertMany([ {name: "Test Company", founded_year: 
   }
 }
 ```
-посмотрим, что получилось уже по фильтру оффисов по России
+Посмотрим, что получилось уже по фильтру оффисов в России
 ```javascript
 sample_training> db.companies.find({'offices.country_code' : 'RUS'}, { name : 1, founded_year :1 , category_code : 1 ,'offices.city' : 1,'offices.country_code' : 1}).sort({founded_year : 1}).skip(2).limit(11)
 [
@@ -253,3 +265,87 @@ sample_training> db.companies.find({'offices.country_code' : 'RUS'}, { name : 1,
   }
 ]
 ```
+посмотрим кол-во компаний,основанных после 1989 года невключительно, сгруппируем кол-во по годам и отсортируем по кол-ву, начиная с наибольшего
+```javascript
+sample_training>  db.companies.aggregate([{$match:{founded_year:{$gt: 1989}}},{"$group":{_id:{founded_year:"$founded_year"},count:{$sum:1}}},{$sort:{count:-1}}]).toArray()
+[
+  { _id: { founded_year: 2008 }, count: 1224 },
+  { _id: { founded_year: 2007 }, count: 1159 },
+  { _id: { founded_year: 2006 }, count: 744 },
+  { _id: { founded_year: 2005 }, count: 467 },
+  { _id: { founded_year: 2004 }, count: 385 },
+  { _id: { founded_year: 2009 }, count: 357 },
+  { _id: { founded_year: 2003 }, count: 291 },
+  { _id: { founded_year: 2000 }, count: 276 },
+  { _id: { founded_year: 2002 }, count: 256 },
+  { _id: { founded_year: 1999 }, count: 250 },
+  { _id: { founded_year: 2001 }, count: 247 },
+  { _id: { founded_year: 1998 }, count: 148 },
+  { _id: { founded_year: 1996 }, count: 115 },
+  { _id: { founded_year: 1997 }, count: 88 },
+  { _id: { founded_year: 1995 }, count: 73 },
+  { _id: { founded_year: 1994 }, count: 43 },
+  { _id: { founded_year: 1993 }, count: 37 },
+  { _id: { founded_year: 1992 }, count: 34 },
+  { _id: { founded_year: 2010 }, count: 33 },
+  { _id: { founded_year: 1990 }, count: 26 },
+  { _id: { founded_year: 1991 }, count: 24 },
+  { _id: { founded_year: 2011 }, count: 22 },
+  { _id: { founded_year: 2012 }, count: 17 },
+  { _id: { founded_year: 2013 }, count: 5 }
+]
+```
+Создадим индекс для коллекции компаний по году основания
+```javascript
+sample_training> db.companies.getIndexes()
+[ { v: 2, key: { _id: 1 }, name: '_id_' } ]
+sample_training> db.companies.createIndex({ founded_year: 1})
+founded_year_1
+sample_training> db.companies.getIndexes()
+[
+  { v: 2, key: { _id: 1 }, name: '_id_' },
+  { v: 2, key: { founded_year: 1 }, name: 'founded_year_1' }
+]
+```
+Включим профилирование медленных запросов, slowms и sampleRate не меняем, под "медленным", как видно тут принимается запрос дольше 100 мс
+```javascript
+sample_training> db.getProfilingStatus()
+{ was: 0, slowms: 100, sampleRate: 1, ok: 1 }
+sample_training> db.setProfilingLevel(1)
+{ was: 0, slowms: 100, sampleRate: 1, ok: 1 }
+sample_training> db.getProfilingStatus()
+{ was: 1, slowms: 100, sampleRate: 1, ok: 1 }
+```
+
+Прогоним тот же запрос для компаний и посмотрим проекции на интересные поля в специальной системной коллекции для профилирования запросов с фильтрами интересующей нас коллекции компаний и для запросов дольше 300 мс
+
+```javascript
+sample_training>  db.companies.aggregate([{$match:{founded_year:{$gt: 1989}}},{"$group":{_id:{founded_year:"$founded_year"},count:{$sum:1}}},{$sort:{count:-1}}]).toArray()
+...
+
+sample_training> db.system.profile.find({$and: [{millis : {$gte : 300} }, {ns: 'sample_training.companies'}]}, {nreturned:1,millis:1,responseLength:1,cpuNanos:1,planSummary:1,planningTimeMicros:1,keysExamined:1,docsExamined:1})
+[
+  {
+    keysExamined: 0,
+    docsExamined: 9504,
+    nreturned: 24,
+    responseLength: 1256,
+    cpuNanos: 35048556,
+    millis: 449,
+    planSummary: 'COLLSCAN',
+    planningTimeMicros: 144490
+  },
+  {
+    keysExamined: 6321,
+    docsExamined: 0,
+    nreturned: 24,
+    responseLength: 1256,
+    cpuNanos: 29143858,
+    millis: 302,
+    planSummary: 'IXSCAN { founded_year: 1 }',
+    planningTimeMicros: 90533
+  }
+]
+```
+Ну и собственно, как и ожидалось, видим по значению поля planSummary, что первый запрос использует сканирование коллекции и соответственно показывает, сколько документов было проверено (docsExamined), а второй запрос использует скан по индексу и отображает уже ненулевым поле keysExamined - количество проверенных ключей индекса.
+Все тайминги (millis,cpuNanos,planningTimeMicros) меньше для запроса с индексом, он выполняется быстрее
