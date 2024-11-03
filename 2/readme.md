@@ -265,7 +265,7 @@ sample_training> db.companies.find({'offices.country_code' : 'RUS'}, { name : 1,
   }
 ]
 ```
-посмотрим кол-во компаний,основанных после 1989 года невключительно, сгруппируем кол-во по годам и отсортируем по кол-ву, начиная с наибольшего
+Посмотрим количество компаний, основанных после 1989 года невключительно, сгруппируем по годам и отсортируем по количеству, начиная с наибольшего
 ```javascript
 sample_training>  db.companies.aggregate([{$match:{founded_year:{$gt: 1989}}},{"$group":{_id:{founded_year:"$founded_year"},count:{$sum:1}}},{$sort:{count:-1}}]).toArray()
 [
