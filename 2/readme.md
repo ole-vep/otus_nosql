@@ -15,7 +15,7 @@ echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gp
 sudo apt-get update
 sudo apt-get install -y mongodb-org
 
-~# dpkg -l | grep mongo
+# dpkg -l | grep mongo
 ii  mongodb-database-tools           100.10.0     amd64        mongodb-database-tools package provides tools for working with the MongoDB server:
 ii  mongodb-mongosh                  2.3.3        amd64        MongoDB Shell CLI REPL Package
 ii  mongodb-org                      8.0.3        amd64        MongoDB open source document-oriented database system (metapackage)
@@ -118,7 +118,7 @@ sample_training> db.companies.find({'offices.city' : 'Moscow'}, { name : 1 , per
 ]
 
 ```
-обновим год основания для компании 'OSG Records Management'
+Обновим год основания для компании 'OSG Records Management'
 ```javascript
 sample_training> db.companies.updateOne({name:  'OSG Records Management'}, {$set: {founded_year: 1998}})
 {
@@ -129,7 +129,7 @@ sample_training> db.companies.updateOne({name:  'OSG Records Management'}, {$set
   upsertedCount: 0
 }
 ```
-вставим значения
+Вставим пару значений
 ```javascript
 sample_training> db.companies.insertMany([ {name: "Test Company", founded_year: 1990, category_code: "testware", offices: [ { city: 'Moscow', country_code: 'RUS' } ] }, {name: "Mongo RUS", founded_year: 1991, category_code: "sales", offices: [ { city: 'St. Petersburg', country_code: 'RUS' } ] } ])
 {
@@ -140,7 +140,7 @@ sample_training> db.companies.insertMany([ {name: "Test Company", founded_year: 
   }
 }
 ```
-Посмотрим, что получилось уже по фильтру оффисов в России
+Посмотрим, что получилось уже по фильтру оффисов в России, отсортированных по году основания, все новые записи тоже попали в выборку
 ```javascript
 sample_training> db.companies.find({'offices.country_code' : 'RUS'}, { name : 1, founded_year :1 , category_code : 1 ,'offices.city' : 1,'offices.country_code' : 1}).sort({founded_year : 1}).skip(2).limit(11)
 [
