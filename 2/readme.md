@@ -265,6 +265,18 @@ sample_training> db.companies.find({'offices.country_code' : 'RUS'}, { name : 1,
   }
 ]
 ```
+#### 4. Сравнение производительности
+Попробуем сравнить производительность запросов с индексом и без.
+Включим профилирование медленных запросов, slowms и sampleRate не меняем, под "медленным", как видно тут принимается запрос дольше 100 мс
+```javascript
+sample_training> db.getProfilingStatus()
+{ was: 0, slowms: 100, sampleRate: 1, ok: 1 }
+sample_training> db.setProfilingLevel(1)
+{ was: 0, slowms: 100, sampleRate: 1, ok: 1 }
+sample_training> db.getProfilingStatus()
+{ was: 1, slowms: 100, sampleRate: 1, ok: 1 }
+```
+
 Посмотрим количество компаний, основанных после 1989 года невключительно, сгруппируем по годам и отсортируем по количеству, начиная с наибольшего
 ```javascript
 sample_training>  db.companies.aggregate([{$match:{founded_year:{$gt: 1989}}},{"$group":{_id:{founded_year:"$founded_year"},count:{$sum:1}}},{$sort:{count:-1}}]).toArray()
@@ -307,16 +319,6 @@ sample_training> db.companies.getIndexes()
   { v: 2, key: { founded_year: 1 }, name: 'founded_year_1' }
 ]
 ```
-Включим профилирование медленных запросов, slowms и sampleRate не меняем, под "медленным", как видно тут принимается запрос дольше 100 мс
-```javascript
-sample_training> db.getProfilingStatus()
-{ was: 0, slowms: 100, sampleRate: 1, ok: 1 }
-sample_training> db.setProfilingLevel(1)
-{ was: 0, slowms: 100, sampleRate: 1, ok: 1 }
-sample_training> db.getProfilingStatus()
-{ was: 1, slowms: 100, sampleRate: 1, ok: 1 }
-```
-
 Прогоним тот же запрос для компаний и посмотрим проекции на интересные поля в специальной системной коллекции для профилирования запросов с фильтрами интересующей нас коллекции компаний и для запросов дольше 300 мс
 
 ```javascript
@@ -347,5 +349,5 @@ sample_training> db.system.profile.find({$and: [{millis : {$gte : 300} }, {ns: '
   }
 ]
 ```
-Ну и собственно, как и ожидалось, видим по значению поля planSummary, что первый запрос использует сканирование коллекции и соответственно показывает, сколько документов было проверено (docsExamined), а второй запрос использует скан по индексу и отображает уже ненулевым поле keysExamined - количество проверенных ключей индекса.
+Ну и собственно, как и ожидалось, видим по значению поля planSummary, что первый запрос использует сканирование коллекции и соответственно показывает, сколько документов было проверено (docsExamined), а второй запрос использует скан по созданному ранее индексу founded_year_1 и отображает уже ненулевым поле keysExamined - количество проверенных ключей индекса.
 Все тайминги (millis,cpuNanos,planningTimeMicros) меньше для запроса с индексом, он выполняется быстрее
