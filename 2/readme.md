@@ -140,9 +140,10 @@ sample_training> db.companies.insertMany([ {name: "Test Company", founded_year: 
   }
 }
 ```
-Посмотрим, что получилось уже по фильтру оффисов в России, отсортированных по году основания, все новые записи тоже попали в выборку
+Посмотрим, что получилось по фильтру оффисов в России, отсортированных по году основания по 1998 включительно, измененные и добавленные записи тоже попали в выборку
 ```javascript
-sample_training> db.companies.find({'offices.country_code' : 'RUS'}, { name : 1, founded_year :1 , category_code : 1 ,'offices.city' : 1,'offices.country_code' : 1}).sort({founded_year : 1}).skip(2).limit(11)
+
+sample_training> db.companies.find({'offices.country_code' : 'RUS', founded_year : {$lte : 1998}}, { name : 1, founded_year :1 , category_code : 1 ,'offices.city' : 1,'offices.country_code' : 1}).sort({founded_year : 1})
 [
   {
     _id: ObjectId('52cdef7d4bab8bd675298bd4'),
