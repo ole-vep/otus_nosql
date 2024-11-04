@@ -642,3 +642,169 @@ Totals
   ]
 }
 ```
+#### Отключение инстансов
+Посмотрим текущий статус репликации на втором шарде
+```bash
+shard-replica-set-2 [direct: primary] test
+> rs.status()
+
+      _id: 0,
+      name: 'mongo-shard-2-rs-1:40021',
+      health: 1,
+      state: 2,
+      stateStr: 'SECONDARY',
+
+      _id: 1,
+      name: 'mongo-shard-2-rs-2:40022',
+      health: 1,
+      state: 1,
+      stateStr: 'PRIMARY',
+
+      _id: 2,
+      name: 'mongo-shard-2-rs-3:40023',
+      health: 1,
+      state: 2,
+      stateStr: 'SECONDARY',
+```
+
+Отключим второй инстанс
+```bash
+docker stop mongo-shard-2-rs-2
+> rs.status()
+
+      _id: 0,
+      name: 'mongo-shard-2-rs-1:40021',
+      health: 1,
+      state: 2,
+      stateStr: 'SECONDARY',
+    
+      _id: 1,
+      name: 'mongo-shard-2-rs-2:40022',
+      health: 0,
+      state: 8,
+      stateStr: '(not reachable/healthy)',
+    
+      _id: 2,
+      name: 'mongo-shard-2-rs-3:40023',
+      health: 1,
+      state: 2,
+      stateStr: 'SECONDARY',
+```
+
+Прошли перевыборы, первый стал ведущим
+```bash
+> rs.status()
+    
+      _id: 0,
+      name: 'mongo-shard-2-rs-1:40021',
+      health: 1,
+      state: 1,
+      stateStr: 'PRIMARY',
+    
+      _id: 1,
+      name: 'mongo-shard-2-rs-2:40022',
+      health: 0,
+      state: 8,
+      stateStr: '(not reachable/healthy)',
+    
+      _id: 2,
+      name: 'mongo-shard-2-rs-3:40023',
+      health: 1,
+      state: 2,
+      stateStr: 'SECONDARY',
+```
+
+Отключим третий инстанс. 
+Оставшийся первый некоторое время был лидером и потом в ушел в "secondary" довольно быстро
+
+```bash
+docker stop mongo-shard-2-rs-3
+
+> rs.status()
+
+      _id: 0,
+      name: 'mongo-shard-2-rs-1:40021',
+      health: 1,
+      state: 1,
+      stateStr: 'PRIMARY',
+
+      _id: 1,
+      name: 'mongo-shard-2-rs-2:40022',
+      health: 0,
+      state: 8,
+      stateStr: '(not reachable/healthy)',
+ 
+      _id: 2,
+      name: 'mongo-shard-2-rs-3:40023',
+      health: 0,
+      state: 8,
+      stateStr: '(not reachable/healthy)',
+
+
+
+shard-replica-set-2 [direct: secondary] test> rs.status()
+
+  members: [
+    {
+      _id: 0,
+      name: 'mongo-shard-2-rs-1:40021',
+      health: 1,
+      state: 2,
+      stateStr: 'SECONDARY',
+
+    {
+      _id: 1,
+      name: 'mongo-shard-2-rs-2:40022',
+      health: 0,
+      state: 8,
+      stateStr: '(not reachable/healthy)',
+
+    {
+      _id: 2,
+      name: 'mongo-shard-2-rs-3:40023',
+      health: 0,
+      state: 8,
+      stateStr: '(not reachable/healthy)',
+```
+
+На mongos в этот момент получим такую ошибку, так нужен primary в репликасете второго шарда 
+```
+[direct: mongos] samples> db.companies.getShardDistribution()
+MongoServerError[FailedToSatisfyReadPreference]: Could not find host matching read preference { mode: "primary" } for set shard-replica-set-2
+```
+
+Обратно поднимаем третий, прошли выборы нового мастера
+```bash
+docker start mongo-shard-2-rs-3
+
+shard-replica-set-2 [direct: primary] test> rs.status()
+{
+
+  members: [
+    {
+      _id: 0,
+      name: 'mongo-shard-2-rs-1:40021',
+      health: 1,
+      state: 1,
+      stateStr: 'PRIMARY',
+
+    {
+      _id: 1,
+      name: 'mongo-shard-2-rs-2:40022',
+      health: 0,
+      state: 8,
+      stateStr: '(not reachable/healthy)',
+
+    {
+      _id: 2,
+      name: 'mongo-shard-2-rs-3:40023',
+      health: 1,
+      state: 2,
+      stateStr: 'SECONDARY',
+```
+Функциональность восстановлена
+
+Если останется только одна нода из репликасета конфигсервера например, то получим аналогичное сообщение
+direct: mongos] samples> db.companies.getShardDistribution()
+MongoServerError[FailedToSatisfyReadPreference]: Encountered non-retryable error during query :: caused by :: Could not find host matching read preference { mode: "primary" } for set config-replica-set
+#### Ролевой доступ
