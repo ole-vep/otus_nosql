@@ -807,4 +807,251 @@ shard-replica-set-2 [direct: primary] test> rs.status()
 Если останется только одна нода из репликасета конфигсервера например, то получим аналогичное сообщение
 direct: mongos] samples> db.companies.getShardDistribution()
 MongoServerError[FailedToSatisfyReadPreference]: Encountered non-retryable error during query :: caused by :: Could not find host matching read preference { mode: "primary" } for set config-replica-set
+
 #### Ролевой доступ
+
+Предварительно создадим юзера с ролью root
+```javascript
+[direct: mongos] samples> use admin
+switched to db admin
+[direct: mongos] admin> db.getUsers()
+{
+  users: [],
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1730748914, i: 2 }),
+    signature: {
+      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),
+      keyId: Long('0')
+    }
+  },
+  operationTime: Timestamp({ t: 1730748914, i: 2 })
+}
+
+[direct: mongos] admin> db.createUser({user: "root", pwd: "password", roles: [{ role: "root", db: "admin" }]})
+{
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1730748991, i: 4 }),
+    signature: {
+      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),
+      keyId: Long('0')
+    }
+  },
+  operationTime: Timestamp({ t: 1730748991, i: 4 })
+}
+
+[direct: mongos] admin> db.getUsers()
+{
+  users: [
+    {
+      _id: 'admin.root',
+      userId: UUID('0050bc9f-b7fb-4996-93ee-930ac00767f0'),
+      user: 'root',
+      db: 'admin',
+      roles: [ { role: 'root', db: 'admin' } ],
+      mechanisms: [ 'SCRAM-SHA-1', 'SCRAM-SHA-256' ]
+    }
+  ],
+  ok: 1,
+  '$clusterTime': {
+    clusterTime: Timestamp({ t: 1730749014, i: 2 }),
+    signature: {
+      hash: Binary.createFromBase64('AAAAAAAAAAAAAAAAAAAAAAAAAAA=', 0),
+      keyId: Long('0')
+    }
+  },
+  operationTime: Timestamp({ t: 1730749014, i: 2 })
+}
+```
+Включим авторизацию для этого шардированного кластера с помощью key-файла, создадим его
+```bash
+mkdir -p /etc/mongo/
+echo -e "password" > /etc/mongo/key_pswrd
+sudo chown 999:999 /etc/mongo/key_pswrd
+```
+прокинем keyFile во все контейнеры,отредактировав docker-compose.yml
+```
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+```
+и дополнительно добавим также опции запуска во все инстансы 
+```
+"--auth","--keyFile", "/etc/mongo/key_pswrd"
+```
+перезапустим всё
+```
+docker compose -f ./docker-compose.yml up -d
+```
+
+Зайдем, увидим что без авторизации ничего не доступно, авторизуемся
+```javascript
+#mongosh --port 40100
+Current Mongosh Log ID: 672956b2fffcc4fceec1c18b
+Connecting to:          mongodb://127.0.0.1:40100/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.3.3
+Using MongoDB:          8.0.3
+Using Mongosh:          2.3.3
+
+For mongosh info see: https://www.mongodb.com/docs/mongodb-shell/
+
+[direct: mongos] test> show dbs
+MongoServerError[Unauthorized]: Command listDatabases requires authentication
+[direct: mongos] test> db.getUsers()
+MongoServerError[Unauthorized]: Command usersInfo requires authentication
+[direct: mongos] test> use admin
+switched to db admin
+[direct: mongos] admin> sh.status()
+MongoServerError[Unauthorized]: Command find requires authentication
+[direct: mongos] admin> db.auth('root','password')
+{ ok: 1 }
+```
+Теперь все команды доступны
+```javascript
+[direct: mongos] admin> db.getUsers()
+{
+  users: [
+    {
+      _id: 'admin.root',
+      userId: UUID('aa627463-5211-4053-b6f1-52253e730e31'),
+      user: 'root',
+      db: 'admin',
+      roles: [ { role: 'root', db: 'admin' } ],
+      mechanisms: [ 'SCRAM-SHA-1', 'SCRAM-SHA-256' ]
+    }
+  ]
+    }
+  },
+  operationTime: Timestamp({ t: 1730762466, i: 1 })
+}
+[direct: mongos] admin> show dbs
+admin    244.00 KiB
+config     3.71 MiB
+samples   69.98 MiB
+
+[direct: mongos] admin> use samples
+switched to db samples
+[direct: mongos] samples> db.companies.getShardDistribution()
+Shard shard-replica-set-1 at shard-replica-set-1/mongo-shard-1-rs-1:40011,mongo-shard-1-rs-2:40012,mongo-shard-1-rs-3:40013
+{
+  data: '7MiB',
+  docs: 1204,
+  chunks: 4,
+  'estimated data per chunk': '1.75MiB',
+  'estimated docs per chunk': 301
+}
+---
+Shard shard-replica-set-3 at shard-replica-set-3/mongo-shard-3-rs-1:40031,mongo-shard-3-rs-2:40032,mongo-shard-3-rs-3:40033
+{
+  data: '6.79MiB',
+  docs: 1263,
+  chunks: 4,
+  'estimated data per chunk': '1.69MiB',
+  'estimated docs per chunk': 315
+}
+---
+Shard shard-replica-set-2 at shard-replica-set-2/mongo-shard-2-rs-1:40021,mongo-shard-2-rs-2:40022,mongo-shard-2-rs-3:40023
+{
+  data: '43.26MiB',
+  docs: 10669,
+  chunks: 10,
+  'estimated data per chunk': '4.32MiB',
+  'estimated docs per chunk': 1066
+}
+---
+Totals
+{
+  data: '57.06MiB',
+  docs: 13136,
+  chunks: 18,
+  'Shard shard-replica-set-1': [
+    '12.27 % data',
+    '9.16 % docs in cluster',
+    '5KiB avg obj size on shard'
+  ],
+  'Shard shard-replica-set-3': [
+    '11.9 % data',
+    '9.61 % docs in cluster',
+    '5KiB avg obj size on shard'
+  ],
+  'Shard shard-replica-set-2': [
+    '75.81 % data',
+    '81.21 % docs in cluster',
+    '4KiB avg obj size on shard'
+  ]
+}
+```
+Для простейшей ролевой модели создадим ReadWrite учетную запись для работы с базой samples и рид-онли пользователя также для это базы
+
+```javascript
+use admin
+db.createUser({user: "readWriteSamples",pwd: "rwpassword",roles: [{ role: "readWrite", db: "samples" }]})
+db.createUser({user: "readSamples",pwd: "rpassword",roles: [{ role: "read", db: "samples" }]})
+```
+Авторизуемся сначала под rw пользователем, у него нет возможности писать в другие бд, но есть в свою
+```javascript
+db.auth('readWriteSamples','rwpassword')
+[direct: mongos] admin> db.people.insertOne({ name: "John", age: 30, status: "active" })
+MongoServerError[Unauthorized]: not authorized on admin to execute command { insert: "people", documents: [ { name: "John", age: 30, status: "active", _id: ObjectId('67295ad8fffcc4fceec1c18c') } ], ordered: true, lsid: { id: UUID("c4e3308e-b9af-451f-bdaf-b59b8d25e7c3") }, txnNumber: 1, $clusterTime: { clusterTime: Timestamp(1730763396, 1), signature: { hash: BinData(0, 701232FF74A285171C03970E0EE2C3CAB5C6BC9A), keyId: 7432711836559998986 } }, $db: "admin" }
+
+[direct: mongos] admin> show dbs
+samples  70.02 MiB
+[direct: mongos] admin> use samples
+switched to db samples
+[direct: mongos] samples> db.people.insertOne({ name: "John", age: 30, status: "active" })
+{
+  acknowledged: true,
+  insertedId: ObjectId('67295ae6fffcc4fceec1c18d')
+}
+```
+Теперь авторизуемся под учетной записью пользователя на чтение, ему всё доступно на просмотр в базе samples
+```javascript
+[direct: mongos] samples> use admin
+switched to db admin
+[direct: mongos] admin> db.auth('readSamples','rpassword')
+{ ok: 1 }
+[direct: mongos] admin> show dbs
+samples  70.02 MiB
+[direct: mongos] admin> use samples
+switched to db samples
+[direct: mongos] samples> show collections
+city_inspections
+companies
+countries-big
+countries-small
+people
+products
+profiles
+restaurants
+zips
+[direct: mongos] samples> db.people
+db.people
+
+[direct: mongos] samples> db.people.find()
+[
+  {
+    _id: ObjectId('67295ae6fffcc4fceec1c18d'),
+    name: 'John',
+    age: 30,
+    status: 'active'
+  }
+]
+```
+Изменения запрещены
+```javascript
+[direct: mongos] samples> db.people.insertOne({ name: "Tony", age: 29, status: "active" })
+MongoServerError[Unauthorized]: not authorized on samples to execute command { insert: "people", documents: [ { name: "Tony", age: 29, status: "active", _id: ObjectId('67295b78fffcc4fceec1c18e') } ], ordered: true, lsid: { id: UUID("a899c163-27a6-4acd-8709-d4ce3b8df546") }, txnNumber: 1, $clusterTime: { clusterTime: Timestamp(1730763613, 1), signature: { hash: BinData(0, 72ACB6FE45049001FEE82CAE888B137993C41D39), keyId: 7432711836559998986 } }, $db: "samples" }
+[direct: mongos] samples> db.people.deleteOne({ name: "John"})
+MongoServerError[Unauthorized]: not authorized on samples to execute command { delete: "people", deletes: [ { q: { name: "John" }, limit: 1 } ], ordered: true, lsid: { id: UUID("63a4cdf4-2f0b-4e60-8c08-976b05b3893a") }, txnNumber: 2, $clusterTime: { clusterTime: Timestamp(1730765209, 2), signature: { hash: BinData(0, 02842902A8EB869B15E26C559579C7DB8AE30676), keyId: 7432711836559998986 } }, $db: "samples" }
+
+```
+Авторизуемся обратно под rw-пользователем, удалим запись.
+```javascript
+[direct: mongos] samples> use admin
+switched to db admin
+[direct: mongos] admin> db.auth('readWriteSamples','rwpassword')
+{ ok: 1 }
+[direct: mongos] admin> use samples
+switched to db samples
+[direct: mongos] samples> db.people.deleteOne({ name: "John"})
+{ acknowledged: true, deletedCount: 1 }
+```
