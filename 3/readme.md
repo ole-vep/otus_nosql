@@ -767,7 +767,7 @@ shard-replica-set-2 [direct: secondary] test> rs.status()
       stateStr: '(not reachable/healthy)',
 ```
 
-На mongos в этот момент получим такую ошибку, так нужен primary в репликасете второго шарда 
+На mongos в этот момент получим такую ошибку, так как нужен primary в репликасете второго шарда 
 ```
 [direct: mongos] samples> db.companies.getShardDistribution()
 MongoServerError[FailedToSatisfyReadPreference]: Could not find host matching read preference { mode: "primary" } for set shard-replica-set-2
@@ -875,7 +875,7 @@ sudo chown 999:999 /etc/mongo/key_pswrd
     volumes:
       - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
 ```
-и дополнительно добавим также опции запуска во все инстансы 
+и дополнительно добавим также опции запуска во все инстансы (обновленный yaml приложил)
 ```
 "--auth","--keyFile", "/etc/mongo/key_pswrd"
 ```
@@ -884,7 +884,7 @@ sudo chown 999:999 /etc/mongo/key_pswrd
 docker compose -f ./docker-compose.yml up -d
 ```
 
-Зайдем, увидим что без авторизации ничего не доступно, авторизуемся
+Зайдем, увидим, что без авторизации ничего не доступно, авторизуемся
 ```javascript
 #mongosh --port 40100
 Current Mongosh Log ID: 672956b2fffcc4fceec1c18b

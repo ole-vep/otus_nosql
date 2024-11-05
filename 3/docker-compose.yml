@@ -1,0 +1,131 @@
+services:
+# config server
+  mongo-configsvr-1:
+    image: mongo:8
+    container_name: mongo-configsvr-1
+    hostname: mongo-configsvr-1
+    command: ["--configsvr", "--replSet", "config-replica-set", "--bind_ip_all", "--port", "40001","--auth","--keyFile", "/etc/mongo/key_pswrd"]
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - 40001:40001
+
+  mongo-configsvr-2:
+    image: mongo:8
+    container_name: mongo-configsvr-2
+    hostname: mongo-configsvr-2
+    command: ["--configsvr", "--replSet", "config-replica-set", "--bind_ip_all", "--port", "40002","--auth","--keyFile", "/etc/mongo/key_pswrd"]
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - 40002:40002
+
+  mongo-configsvr-3:
+    image: mongo:8
+    container_name: mongo-configsvr-3
+    hostname: mongo-configsvr-3
+    command: ["--configsvr", "--replSet", "config-replica-set", "--bind_ip_all", "--port", "40003","--auth","--keyFile", "/etc/mongo/key_pswrd"]
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - 40003:40003
+# shard 1
+  mongo-shard-1-rs-1:
+    image: mongo:8
+    container_name: mongo-shard-1-rs-1
+    hostname: mongo-shard-1-rs-1
+    command: ["--shardsvr", "--replSet", "shard-replica-set-1", "--bind_ip_all", "--port", "40011","--auth","--keyFile", "/etc/mongo/key_pswrd"]
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - 40011:40011
+
+  mongo-shard-1-rs-2:
+    image: mongo:8
+    container_name: mongo-shard-1-rs-2
+    hostname: mongo-shard-1-rs-2
+    command: ["--shardsvr", "--replSet", "shard-replica-set-1", "--bind_ip_all", "--port", "40012","--auth","--keyFile", "/etc/mongo/key_pswrd"]
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - 40012:40012
+
+  mongo-shard-1-rs-3:
+    image: mongo:8
+    container_name: mongo-shard-1-rs-3
+    hostname: mongo-shard-1-rs-3
+    command: ["--shardsvr", "--replSet", "shard-replica-set-1", "--bind_ip_all", "--port", "40013","--auth","--keyFile", "/etc/mongo/key_pswrd"]
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - 40013:40013
+#shard 2
+  mongo-shard-2-rs-1:
+    image: mongo:8
+    container_name: mongo-shard-2-rs-1
+    hostname: mongo-shard-2-rs-1
+    command: ["--shardsvr", "--replSet", "shard-replica-set-2", "--bind_ip_all", "--port", "40021","--auth","--keyFile", "/etc/mongo/key_pswrd"]
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - 40021:40021
+
+  mongo-shard-2-rs-2:
+    image: mongo:8
+    container_name: mongo-shard-2-rs-2
+    hostname: mongo-shard-2-rs-2
+    command: ["--shardsvr", "--replSet", "shard-replica-set-2", "--bind_ip_all", "--port", "40022","--auth","--keyFile", "/etc/mongo/key_pswrd"]
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - 40022:40022
+
+  mongo-shard-2-rs-3:
+    image: mongo:8
+    container_name: mongo-shard-2-rs-3
+    hostname: mongo-shard-2-rs-3
+    command: ["--shardsvr", "--replSet", "shard-replica-set-2", "--bind_ip_all", "--port", "40023","--auth","--keyFile", "/etc/mongo/key_pswrd"]
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - 40023:40023
+# shard 3
+  mongo-shard-3-rs-1:
+    image: mongo:8
+    container_name: mongo-shard-3-rs-1
+    hostname: mongo-shard-3-rs-1
+    command: ["--shardsvr", "--replSet", "shard-replica-set-3", "--bind_ip_all", "--port", "40031","--auth","--keyFile", "/etc/mongo/key_pswrd"]
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - 40031:40031
+
+  mongo-shard-3-rs-2:
+    image: mongo:8
+    container_name: mongo-shard-3-rs-2
+    hostname: mongo-shard-3-rs-2
+    command: ["--shardsvr", "--replSet", "shard-replica-set-3", "--bind_ip_all", "--port", "40032","--auth","--keyFile", "/etc/mongo/key_pswrd"]
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - 40032:40032
+
+  mongo-shard-3-rs-3:
+    image: mongo:8
+    container_name: mongo-shard-3-rs-3
+    hostname: mongo-shard-3-rs-3
+    command: ["--shardsvr", "--replSet", "shard-replica-set-3", "--bind_ip_all", "--port", "40033","--auth","--keyFile", "/etc/mongo/key_pswrd"]
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - 40033:40033
+# mongos
+  mongos-shard:
+    image: mongo:8
+    container_name: mongos-shard
+    hostname: mongos-shard
+    command: mongos --configdb config-replica-set/mongo-configsvr-1:40001,mongo-configsvr-2:40002,mongo-configsvr-3:40003 --bind_ip_all --keyFile /etc/mongo/key_pswrd
+    volumes:
+      - /etc/mongo/key_pswrd:/etc/mongo/key_pswrd
+    ports:
+      - "40100:27017"
