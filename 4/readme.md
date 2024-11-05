@@ -1,4 +1,4 @@
-### Разворот кластер couchbase
+## Разворот кластера couchbase
 Развернем с помощью docker compose кластер следующей топологии
 ```bash
 # cat docker-compose.yaml
@@ -54,7 +54,7 @@ ca4f780f018a   couchbase:community-7.0.2   "/entrypoint.sh couc…"   32 minutes
 Заходим http://localhost:8093 Аналогично третью ноду подключаем и делаем ребалансировку
 ![Alt text](4.png?raw=true "3")
 
-### Создание БД / Наполнение данными
+## Создание БД / Наполнение данными
 В разделе buckets создадим тестовый бакет из нескольких предлагаемых из коробки тестовых сэмплов, например, "beer-samples", другие также доступны в настройках
 ![Alt text](sample_bckt.png?raw=true "sample_bucket")
 
@@ -63,12 +63,14 @@ ca4f780f018a   couchbase:community-7.0.2   "/entrypoint.sh couc…"   32 minutes
 
 из документации
 ```
-In Couchbase Server 7.0 and later, documents are stored in collections, which are stored in scopes, which are in turn stored in buckets within a namespace. The query engine needs to be aware of the full path of the collection. The fully qualified path of a collection has the following format:
+In Couchbase Server 7.0 and later, documents are stored in collections, which are stored in scopes, which are in turn stored in buckets within a namespace. 
+The query engine needs to be aware of the full path of the collection. The fully qualified path of a collection has the following format:
 namespace:bucket.scope.collection
 ```
 Попробуем сделать простейший запрос в разделе Query
 ![Alt text](query_.png?raw=true "query")
-### Проверка отказоустойчивости
+
+## Проверка отказоустойчивости
 Остановим первый инстанс
 ```
 # docker stop couchbase1
@@ -109,6 +111,7 @@ web-ui отпал
 ![Alt text](rejoin_.png?raw=true "rejoin_")
 ![Alt text](reb_.png?raw=true "reb_")
 
+## Создание индекса
 Сломался индекс кстати после всех этих манипуляций, ну что ж, пересоздадим
 
 ![Alt text](no_index.png?raw=true "no_index")
