@@ -112,7 +112,7 @@ root@cass1:/# cat /etc/cassandra/cassandra.yaml | grep seeds
       - seeds: "172.21.0.3"
 ```
 
-Заходим в командную строку
+Заходим в командную строку, создадим keyspace
 ```sh
 # docker exec -ti cass1 cqlsh
 Connected to TestCluster at 127.0.0.1:9042
