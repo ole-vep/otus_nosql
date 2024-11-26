@@ -1,8 +1,9 @@
 DCS
 
+### ETCD
 Развернем кластер etcd следующей топологии, описанной в yaml-файле:
 
-```sh
+```yaml
 # cat docker-compose.yaml
 services:
   etcd1:
@@ -82,7 +83,7 @@ dc95023621e8   bitnami/etcd:latest   "/opt/bitnami/script…"   About a minute a
 fcd715eeaf14   bitnami/etcd:latest   "/opt/bitnami/script…"   About a minute ago   Up About a minute   2380/tcp, 0.0.0.0:2381->2379/tcp, [::]:2381->2379/tcp   etcd1
 ```
 
-Зайдём в любой посмотрим удалось ли создать кластер все ли члены кластера нашлись
+Зайдём в любой контейнер, посмотрим удалось ли создать кластер, все ли члены кластера нашлись
 
 ```sh
 # docker exec -ti etcd3 bash
@@ -97,7 +98,7 @@ $ ETCDCTL_API=3 etcdctl endpoint status
 127.0.0.1:2379, bd388e7810915853, 3.5.17, 20 kB, false, false, 3, 12, 12,
 #не очень удобное представление
 
-#с перечилсением енд-поинтов и виде таблички удобнее
+#с перечислением енд-поинтов и виде таблички удобнее
 $ etcdctl --write-out=table --endpoints=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379 endpoint status
 +-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 |     ENDPOINT      |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
