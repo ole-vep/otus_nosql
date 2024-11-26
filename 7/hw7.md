@@ -93,12 +93,12 @@ ade526d28b1f92f7, started, etcd1, http://etcd1:2380, http://etcd1:2379, false
 bd388e7810915853, started, etcd3, http://etcd3:2380, http://etcd3:2379, false
 d282ac2ce600c1ce, started, etcd2, http://etcd2:2380, http://etcd2:2379, false
 
-#Используется API v3
+# Используется API v3
 $ ETCDCTL_API=3 etcdctl endpoint status
 127.0.0.1:2379, bd388e7810915853, 3.5.17, 20 kB, false, false, 3, 12, 12,
-#не очень удобное представление
+# не очень удобное представление
 
-#с перечислением енд-поинтов и виде таблички удобнее
+# с перечислением енд-поинтов и в виде таблички удобнее
 $ etcdctl --write-out=table --endpoints=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379 endpoint status
 +-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 |     ENDPOINT      |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
@@ -108,9 +108,12 @@ $ etcdctl --write-out=table --endpoints=http://etcd1:2379,http://etcd2:2379,http
 | http://etcd3:2379 | bd388e7810915853 |  3.5.17 |   20 kB |     false |      false |         3 |         12 |                 12 |        |
 +-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 ```
-Как видно лидером является вторая нода, кластер функционирует, отключим второй узел # docker stop etcd2
+Как видно лидером является вторая нода, кластер функционирует, отключим второй узел 
 
 ```sh
+# docker stop etcd2
+# docker exec -ti etcd1 bash
+
 @etcd1:/opt/bitnami/etcd$ etcdctl --write-out=table --endpoints=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379 endpoint status
 {"level":"warn","ts":"2024-11-26T18:54:08.229354Z","logger":"etcd-client","caller":"v3@v3.5.17/retry_interceptor.go:63","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0xc00057e000/etcd1:2379","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest balancer error: last connection error: connection error: desc = \"transport: Error while dialing: dial tcp: lookup etcd2 on 127.0.0.11:53: server misbehaving\""}
 Failed to get the status of endpoint http://etcd2:2379 (context deadline exceeded)
@@ -144,8 +147,7 @@ Failed to get the status of endpoint http://etcd2:2379 (context deadline exceede
 
 ```
 # docker start etcd1
-etcd1
-root@dvtest-dbc001lk:~/dcs/etcd# docker exec -it etcd3 bash
+# docker exec -it etcd3 bash
 @etcd3:/opt/bitnami/etcd$ etcdctl --write-out=table --endpoints=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379 endpoint status
 {"level":"warn","ts":"2024-11-26T18:58:52.086367Z","logger":"etcd-client","caller":"v3@v3.5.17/retry_interceptor.go:63","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0xc0004f6000/etcd1:2379","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest balancer error: last connection error: connection error: desc = \"transport: Error while dialing: dial tcp: lookup etcd2 on 127.0.0.11:53: server misbehaving\""}
 Failed to get the status of endpoint http://etcd2:2379 (context deadline exceeded)
@@ -155,11 +157,10 @@ Failed to get the status of endpoint http://etcd2:2379 (context deadline exceede
 | http://etcd1:2379 | ade526d28b1f92f7 |  3.5.17 |   20 kB |     false |      false |         6 |         18 |                 18 |        |
 | http://etcd3:2379 | bd388e7810915853 |  3.5.17 |   20 kB |      true |      false |         6 |         18 |                 18 |        |
 +-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
-@etcd3:/opt/bitnami/etcd$
 exit
-root@dvtest-dbc001lk:~/dcs/etcd# docker start etcd2
-etcd2
-root@dvtest-dbc001lk:~/dcs/etcd# docker exec -it etcd3 bash
+
+# docker start etcd2
+# docker exec -it etcd3 bash
 @etcd3:/opt/bitnami/etcd$ etcdctl --write-out=table --endpoints=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379 endpoint status
 +-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 |     ENDPOINT      |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
@@ -168,5 +169,4 @@ root@dvtest-dbc001lk:~/dcs/etcd# docker exec -it etcd3 bash
 | http://etcd2:2379 | d282ac2ce600c1ce |  3.5.17 |   20 kB |     false |      false |         6 |         21 |                 21 |        |
 | http://etcd3:2379 | bd388e7810915853 |  3.5.17 |   20 kB |      true |      false |         6 |         21 |                 21 |        |
 +-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
-
 ```
