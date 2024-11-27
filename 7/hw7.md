@@ -107,6 +107,12 @@ $ etcdctl --write-out=table --endpoints=http://etcd1:2379,http://etcd2:2379,http
 | http://etcd2:2379 | d282ac2ce600c1ce |  3.5.17 |   20 kB |      true |      false |         3 |         12 |                 12 |        |
 | http://etcd3:2379 | bd388e7810915853 |  3.5.17 |   20 kB |     false |      false |         3 |         12 |                 12 |        |
 +-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+
+# посмотрим, живы ли узлы
+$ etcdctl --endpoints=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379 endpoint health
+http://etcd3:2379 is healthy: successfully committed proposal: took = 4.357796ms
+http://etcd2:2379 is healthy: successfully committed proposal: took = 4.299359ms
+http://etcd1:2379 is healthy: successfully committed proposal: took = 3.848866ms
 ```
 Как видно лидером является вторая нода, кластер функционирует, отключим второй узел 
 
@@ -125,10 +131,12 @@ Failed to get the status of endpoint http://etcd2:2379 (context deadline exceede
 +-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 ```
 Ругается на отсутствие второго узла, но тем не менее прошли перевыборы и кластер работает.
-Выключим лидера # docker stop etcd1
+Выключим нового лидера 
 
 ```sh
+# docker stop etcd1
 # docker exec -it etcd3 bash
+
 @etcd3:/opt/bitnami/etcd$ etcdctl --write-out=table --endpoints=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379 endpoint status
 {"level":"warn","ts":"2024-11-26T18:56:55.093349Z","logger":"etcd-client","caller":"v3@v3.5.17/retry_interceptor.go:63","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0xc00052e000/etcd1:2379","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = latest balancer error: last connection error: connection error: desc = \"transport: Error while dialing: dial tcp: lookup etcd1 on 127.0.0.11:53: server misbehaving\""}
 Failed to get the status of endpoint http://etcd1:2379 (context deadline exceeded)
@@ -170,6 +178,6 @@ exit
 | http://etcd3:2379 | bd388e7810915853 |  3.5.17 |   20 kB |      true |      false |         6 |         21 |                 21 |        |
 +-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 ```
-
+etcdctl --endpoints=http://etcd1:2379,http://etcd2:2379,http://etcd3:2379 endpoint health
 #### Consul
 
