@@ -300,7 +300,7 @@ server-1  172.17.0.2:8301  alive   server  1.20.1  2         dc1  default    <al
 client-1  172.17.0.3:8301  alive   client  1.20.1  2         dc1  default    <default>
 ```
 
-На UI такая картина на вкладке обзор
+На UI по порту 8500 такая картина на вкладке обзор
 ![Alt text](overview.png?raw=true "overview")
 
 У нас один пока сервис, сам консул, который находится на ноде server-1
@@ -483,4 +483,10 @@ cтартанем обратно, джойнится обратно без пр�
 
 2024-11-28T14:00:08.306Z [INFO]  agent.server.serf.lan: serf: EventMemberJoin: client-1 172.17.0.3
 2024-11-28T14:00:08.306Z [INFO]  agent.server: member joined, marking health alive: member=client-1 partition=default
+
+#docker exec cons-serv consul members
+Node      Address          Status  Type    Build   Protocol  DC   Partition  Segment
+server-1  172.17.0.2:8301  alive   server  1.20.1  2         dc1  default    <all>
+client-1  172.17.0.3:8301  alive   client  1.20.1  2         dc1  default    <default>
+client-2  172.17.0.4:8301  alive   client  1.20.1  2         dc1  default    <default>
 ```
