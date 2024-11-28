@@ -223,10 +223,10 @@ server-1  172.17.0.2:8301  alive   server  1.20.1  2         dc1  default    <al
 2024-11-28T12:37:33.253Z [INFO]  agent.server: New leader elected: payload=server-1
 ```
 
-Запускаем ноду клиента client-1 указывая ip-адрес сервера, чтобы она засинкалась с лидером, видно по логам
+Запускаем ноду клиента client-1 указывая ip-адрес сервера, чтобы она засинкалась с лидером, это видно по логам в конце
 ```sh
 docker run --name=cons-client hashicorp/consul agent -node=client-1 -retry-join=172.17.0.2
-```sh
+
 ==> Starting Consul agent...
                Version: '1.20.1'
             Build Date: '2024-10-29 19:04:05 +0000 UTC'
@@ -303,7 +303,7 @@ client-1  172.17.0.3:8301  alive   client  1.20.1  2         dc1  default    <de
 На UI такая картина на вкладке обзор
 ![Alt text](overview.png?raw=true "overview")
 
-У нас один пока сервис, сам консул, который находится на server-1
+У нас один пока сервис, сам консул, который находится на ноде server-1
 ![Alt text](cons_services.png?raw=true "cons_services")
 
 Если провалиться в него
