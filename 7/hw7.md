@@ -1,6 +1,8 @@
 DCS
 
-#### ETCD
+
+
+### ETCD
 Развернем кластер etcd следующей топологии, описанной в yaml-файле:
 
 ```yaml
@@ -114,7 +116,10 @@ http://etcd3:2379 is healthy: successfully committed proposal: took = 4.357796ms
 http://etcd2:2379 is healthy: successfully committed proposal: took = 4.299359ms
 http://etcd1:2379 is healthy: successfully committed proposal: took = 3.848866ms
 ```
-Как видно лидером является вторая нода, кластер функционирует, отключим второй узел 
+
+#### Отключение лидера
+
+Как видно из команд выше лидером является вторая нода, кластер функционирует, отключим второй узел 
 
 ```sh
 # docker stop etcd2
@@ -179,7 +184,7 @@ exit
 +-------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
 ```
 
-#### Consul
+### Consul
 Запускаем в контейнере, образ скачивается последний, так как не указали тэг, в детач режиме, порты проброшены, имя cons-serv, нода server-1
 ```sh
 #docker run -d -p 8500:8500 -p 8600:8600/udp --name=cons-serv hashicorp/consul agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0
@@ -318,6 +323,7 @@ client-1  172.17.0.3:8301  alive   client  1.20.1  2         dc1  default    <de
 
 ![Alt text](cons_nodes.png?raw=true "cons_nodes")
 
+#### Регистрация сервиса
 
 Поднимем простенький тестовый сервис-счётчик посещений страницы на 9001 порту
 ```sh
@@ -434,6 +440,8 @@ Configuration reload triggered
 
 ![Alt text](counting.png?raw=true "counting")
 
+#### Работа с хранилищем ключ-значений
+
 Запишем какие-нибудь тестовые значения в key-value хранилище через второй клиент
 ```sh
 #docker exec cons-client2 consul kv put test/kv test_1
@@ -495,6 +503,8 @@ server-1  172.17.0.2:8301  alive   server  1.20.1  2         dc1  default    <al
 client-1  172.17.0.3:8301  alive   client  1.20.1  2         dc1  default    <default>
 client-2  172.17.0.4:8301  alive   client  1.20.1  2         dc1  default    <default>
 ```
+
+#### Отлючение лидера
 
 Проверим ещё отказоустойчивость узлов типа сервер, запустим абсолютно аналогично еще две ноды server-2 и server-3 на других портах
 ```sh
