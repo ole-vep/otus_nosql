@@ -408,7 +408,7 @@ Configuration reload triggered
 ```
 # docker ps
 CONTAINER ID   IMAGE                              COMMAND                  CREATED              STATUS              PORTS                                                                                                                          NAMES
-ac3daae99cd0   hashicorp/counting-service:0.0.2   "./counting-service"     4 seconds ago        Up 3 seconds        0.0.0.0:9001->9001/tcp, :::9001->9001/tcp                                                                                      counting
+ac3daae99cd0   hashicorp/counting-service:0.0.2   "./counting-service"     About a minute ago   Up About a minute   0.0.0.0:9001->9001/tcp, :::9001->9001/tcp                                                                                      counting
 b844c9e1bc33   hashicorp/consul                   "docker-entrypoint.s…"   About a minute ago   Up About a minute   8300-8302/tcp, 8500/tcp, 8301-8302/udp, 8600/tcp, 8600/udp                                                                     cons-client2
 678cc08d09fe   hashicorp/consul                   "docker-entrypoint.s…"   51 minutes ago       Up 8 minutes        8300-8302/tcp, 8500/tcp, 8301-8302/udp, 8600/tcp, 8600/udp                                                                     cons-client
 838b88f95123   hashicorp/consul                   "docker-entrypoint.s…"   59 minutes ago       Up 59 minutes       8300-8302/tcp, 8600/tcp, 8301-8302/udp, 0.0.0.0:8500->8500/tcp, :::8500->8500/tcp, 0.0.0.0:8600->8600/udp, :::8600->8600/udp   cons-serv
@@ -469,6 +469,7 @@ Success! Data written to: service/config/counting
 ![Alt text](counting9001.png?raw=true "counting9001")
 
 Значения можно также посмотреть и на UI, провалившись в соответствующие папочки, так как сами создали структуру ключей запросами выше
+
 ![Alt text](key_value.png?raw=true "key_value")
 
 ![Alt text](kv_2.png?raw=true "kv_2")
