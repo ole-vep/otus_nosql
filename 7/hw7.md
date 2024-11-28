@@ -300,7 +300,7 @@ server-1  172.17.0.2:8301  alive   server  1.20.1  2         dc1  default    <al
 client-1  172.17.0.3:8301  alive   client  1.20.1  2         dc1  default    <default>
 ```
 
-На UI по порту 8500 такая картина на вкладке обзор
+На UI по порту 8500 такая картина на вкладке обзор, пока у нас один сервер и он же - лидер
 ![Alt text](overview.png?raw=true "overview")
 
 У нас один пока сервис, сам консул, который находится на ноде server-1
@@ -490,3 +490,105 @@ server-1  172.17.0.2:8301  alive   server  1.20.1  2         dc1  default    <al
 client-1  172.17.0.3:8301  alive   client  1.20.1  2         dc1  default    <default>
 client-2  172.17.0.4:8301  alive   client  1.20.1  2         dc1  default    <default>
 ```
+
+Проверим ещё отказоустойчивость узлов типа сервер, запустим абсолютно аналогично еще две ноды server-2 и server-3 на других портах
+```sh
+docker run -d -p 8502:8500 --name=cons-serv2 hashicorp/consul agent -server -ui -node=server-2 -bootstrap-expect=0 -client=0.0.0.0 -retry-join=172.17.0.2
+docker run -d -p 8503:8500 --name=cons-serv3 hashicorp/consul agent -server -ui -node=server-3 -bootstrap-expect=0 -client=0.0.0.0 -retry-join=172.17.0.2
+```
+
+Логи. Видно, как добавляет узел, реплицирует данные и после этого даёт возможность участвовать в голосовании
+```
+2024-11-28T15:41:12.590Z [INFO]  agent.server.serf.lan: serf: EventMemberJoin: server-2 172.17.0.6
+2024-11-28T15:41:12.591Z [INFO]  agent.server: Adding LAN server: server="server-2 (Addr: tcp/172.17.0.6:8300) (DC: dc1)"
+2024-11-28T15:41:12.591Z [INFO]  agent.server.raft: updating configuration: command=AddNonvoter server-id=2fc8726c-08bf-49e7-2e98-7d30a7449bca server-addr=172.17.0.6:8300 servers="[{Suffrage:Voter ID:25392115-a70f-78c4-a942-e026b2ad2fa2 Address:172.17.0.2:8300} {Suffrage:Nonvoter ID:2fc8726c-08bf-49e7-2e98-7d30a7449bca Address:172.17.0.6:8300}]"
+2024-11-28T15:41:12.596Z [INFO]  agent.server.raft: added peer, starting replication: peer=2fc8726c-08bf-49e7-2e98-7d30a7449bca
+2024-11-28T15:41:12.596Z [INFO]  agent.server: member joined, marking health alive: member=server-2 partition=default
+...
+2024-11-28T15:42:17.233Z [INFO]  agent.server.serf.wan: serf: EventMemberJoin: server-3.dc1 172.17.0.7
+2024-11-28T15:42:17.233Z [INFO]  agent.server: Handled event for server in area: event=member-join server=server-3.dc1 area=wan
+2024-11-28T15:42:17.234Z [INFO]  agent.server.raft: added peer, starting replication: peer=83fc627d-0b95-a50b-9d3e-88a3991a84ec
+2024-11-28T15:42:17.237Z [WARN]  agent.server.raft: appendEntries rejected, sending older logs: peer="{Nonvoter 83fc627d-0b95-a50b-9d3e-88a3991a84ec 172.17.0.7:8300}" next=1
+2024-11-28T15:42:17.238Z [INFO]  agent.server: member joined, marking health alive: member=server-3 partition=default
+2024-11-28T15:42:17.359Z [INFO]  agent.server.raft: pipelining replication: peer="{Nonvoter 83fc627d-0b95-a50b-9d3e-88a3991a84ec 172.17.0.7:8300}"
+2024-11-28T15:42:33.276Z [INFO]  agent.server.raft.logstore.verifier: verification checksum OK: elapsed="236.619µs" leaderChecksum=15e152a682ed3edd rangeEnd=1380 rangeStart=1367 readChecksum=15e152a682ed3edd
+2024-11-28T15:42:34.987Z [INFO]  agent.server.autopilot: Promoting server: id=83fc627d-0b95-a50b-9d3e-88a3991a84ec address=172.17.0.7:8300 name=server-3
+2024-11-28T15:42:34.987Z [INFO]  agent.server.raft: updating configuration: command=AddVoter server-id=83fc627d-0b95-a50b-9d3e-88a3991a84ec server-addr=172.17.0.7:8300 servers="[{Suffrage:Voter ID:25392115-a70f-78c4-a942-e026b2ad2fa2 Address:172.17.0.2:8300} {Suffrage:Voter ID:2fc8726c-08bf-49e7-2e98-7d30a7449bca Address:172.17.0.6:8300} {Suffrage:Voter ID:83fc627d-0b95-a50b-9d3e-88a3991a84ec Address:172.17.0.7:8300}]"
+```
+
+
+состояние кластера
+```sh
+# docker exec cons-serv consul members
+Node      Address          Status  Type    Build   Protocol  DC   Partition  Segment
+server-1  172.17.0.2:8301  alive   server  1.20.1  2         dc1  default    <all>
+server-2  172.17.0.6:8301  alive   server  1.20.1  2         dc1  default    <all>
+server-3  172.17.0.7:8301  alive   server  1.20.1  2         dc1  default    <all>
+client-1  172.17.0.3:8301  alive   client  1.20.1  2         dc1  default    <default>
+client-2  172.17.0.4:8301  alive   client  1.20.1  2         dc1  default    <default>
+```
+Вот такая картина на вкладке overview
+![Alt text](status1.png?raw=true "status1")
+
+Отключим первый сервер, проверим статус
+```sh
+#docker stop cons-serv
+cons-serv
+
+# docker exec cons-serv2 consul members
+Node      Address          Status  Type    Build   Protocol  DC   Partition  Segment
+server-1  172.17.0.2:8301  left    server  1.20.1  2         dc1  default    <all>
+server-2  172.17.0.6:8301  alive   server  1.20.1  2         dc1  default    <all>
+server-3  172.17.0.7:8301  alive   server  1.20.1  2         dc1  default    <all>
+client-1  172.17.0.3:8301  alive   client  1.20.1  2         dc1  default    <default>
+client-2  172.17.0.4:8301  alive   client  1.20.1  2         dc1  default    <default>
+```
+
+В логах видим отключение по таймауту server-1 и выборы нового лидера server-3
+```
+2024-11-28T15:43:35.081Z [INFO]  agent.client.memberlist.lan: memberlist: Marking server-1 as failed, suspect timeout reached (2 peer confirmations)
+2024-11-28T15:43:35.081Z [INFO]  agent.client.serf.lan: serf: EventMemberFailed: server-1 172.17.0.2
+2024-11-28T15:43:35.081Z [INFO]  agent.client: removing server: server="server-1 (Addr: tcp/172.17.0.2:8300) (DC: dc1)"
+2024-11-28T15:43:35.145Z [INFO]  agent.client.memberlist.lan: memberlist: Suspect server-1 has failed, no acks received
+2024-11-28T15:43:43.225Z [INFO]  agent.client: New leader elected: payload=server-3
+2024-11-28T15:43:47.425Z [INFO]  agent.client.serf.lan: serf: EventMemberLeave (forced): server-1 172.17.0.2
+2024-11-28T15:43:47.425Z [INFO]  agent.client: removing server: server="server-1 (Addr: tcp/172.17.0.2:8300) (DC: dc1)"
+
+```
+Лидера можно посмотреть и через команду info, показывает является ли лидером нода и кто сейчас лидер. Запустим для второго и третьего сервера
+```sh
+# docker exec cons-serv2 consul info | grep leader
+        leader = false
+        leader_addr = 172.17.0.7:8300
+# docker exec cons-serv3 consul info | grep leader
+        leader = true
+        leader_addr = 172.17.0.7:8300
+```
+
+Посмотрим, что на веб-интерфейсе по порту второго сервера 8502, так как порт 8500 уже не отвечает - мы отключили первый сервер.
+
+В принципе видим тоже самое что и получили командами, лидером стал третий сервер.
+![Alt text](status2.png?raw=true "status2")
+
+
+
+Запустим обратно первый, "вернулся в строй" без проблем сам.
+```
+#docker start cons-serv
+cons-serv
+
+#логи с любой ноды
+2024-11-28T16:53:52.624Z [INFO]  agent.client.serf.lan: serf: EventMemberJoin: server-1 172.17.0.2
+2024-11-28T16:53:52.624Z [INFO]  agent.client: adding server: server="server-1 (Addr: tcp/172.17.0.2:8300) (DC: dc1)"
+
+#docker exec cons-serv consul members
+Node      Address          Status  Type    Build   Protocol  DC   Partition  Segment
+server-1  172.17.0.2:8301  alive   server  1.20.1  2         dc1  default    <all>
+server-2  172.17.0.6:8301  alive   server  1.20.1  2         dc1  default    <all>
+server-3  172.17.0.7:8301  alive   server  1.20.1  2         dc1  default    <all>
+client-1  172.17.0.3:8301  alive   client  1.20.1  2         dc1  default    <default>
+client-2  172.17.0.4:8301  alive   client  1.20.1  2         dc1  default    <default>
+```
+Ожидаемаемая картина и на UI
+
+![Alt text](status3.png?raw=true "status3")
