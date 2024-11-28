@@ -303,7 +303,7 @@ client-1  172.17.0.3:8301  alive   client  1.20.1  2         dc1  default    <de
 На UI по порту 8500 такая картина на вкладке обзор, пока у нас один сервер и он же - лидер
 ![Alt text](overview.png?raw=true "overview")
 
-У нас один пока сервис, сам консул, который находится на ноде server-1
+И сервис у нас тоже пока один, сам консул, который находится на ноде server-1
 ![Alt text](cons_services.png?raw=true "cons_services")
 
 Если провалиться в него
@@ -428,6 +428,11 @@ client-2  172.17.0.4:8301  alive   client  1.20.1  2         dc1  default    <de
 #docker exec cons-client2 consul reload
 Configuration reload triggered
 ```
+Теперь сервис counting зарегистрирован на обоих клиентах
+
+![Alt text](cons_services2.png?raw=true "cons_services2")
+
+![Alt text](counting.png?raw=true "counting")
 
 Запишем какие-нибудь тестовые значения в key-value хранилище через второй клиент
 ```sh
@@ -476,7 +481,7 @@ Success! Data written to: service/config/counting
 
 ![Alt text](kv_test.png?raw=true "kv_test")
 
-cтартанем обратно, джойнится обратно без проблем
+cтартанем обратно первый клиент, джойнится обратно без проблем
 
 ```sh
 #docker start cons-client
