@@ -1035,7 +1035,7 @@ tail -fn50 /var/log/redis/redis_6380.log
 19048:M 31 Jan 2025 17:05:16.042 # Setting secondary replication ID to c6c89cb26d932fa90a669e8c89149a9d642ad915, valid up to offset: 2291. New replication ID is dfc6608efb88597a0da3eeeb4060099be4ca6c7d
 19048:M 31 Jan 2025 17:05:16.042 # Cluster state changed: ok
 ```
-После фейловера стал мастером. Текущее состояние кластера
+Он после фейловера стал мастером. Посмотрим текущее состояние кластера
 ```sh
 10.130.0.29:6379> CLUSTER NODES
 31f4b857dd0a7262dcba588aaf79fd1d5ece809e 10.130.0.16:6384@16384 slave cbe5fe995cf13788a8a779f3bfa1596b080e82ff 0 1738343428124 3 connected
@@ -1046,9 +1046,9 @@ cbe5fe995cf13788a8a779f3bfa1596b080e82ff 10.130.0.3:6381@16381 master - 0 173834
 d0de94ca2d18af9dd67cc7f25d501b858d1872f9 10.130.0.29:6379@16379 myself,master - 0 1738343426000 1 connected 0-5460
 ```
 
-Также можно посмотреть информацию по репликации, у первого мастера есть слейв
+Также можно посмотреть информацию по репликации, у первого мастера есть слейв. А вот redis по порту 6380 уже сам является мастером, слейва у него нет
 ```
-~#redis-cli -c -h 10.130.0.29
+#redis-cli -c -h 10.130.0.29
 10.130.0.29:6379> INFO replication
 # Replication
 role:master
@@ -1064,8 +1064,7 @@ repl_backlog_first_byte_offset:1
 repl_backlog_histlen:6000
 10.130.0.29:6379>
 
-# redis по порту 6380 уже сам является мастером, слейва у него нет
-~# redis-cli -c -h 10.130.0.29 -p 6380
+# redis-cli -c -h 10.130.0.29 -p 6380
 10.130.0.29:6380> INFO replication
 # Replication
 role:master
