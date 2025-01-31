@@ -567,6 +567,12 @@ t=$[$t+1]
 done
 
 redis/.scr_z.sh
+
+# результат
+~# tail -n3 redis/zadd_result
+ZADD ztest 49912 "row: 15838, name: Sunil Kapoor,language: Hindi,id: VY2A0APGVHK5NAW2,bio: Proin tempus eu risus nec mattis. Ut dictum, ligula eget sagittis maximus, tellus mi varius ex, a accumsan justo tellus vitae leo. In id elit malesuada, pulvinar mi eu, imperdiet nulla.,version: 8.04"
+ZADD ztest 29115 "row: 15839, name: Zamokuhle Zulu,language: isiZulu,id: XU7BX2F8M5PVZ1EF,bio: Etiam congue dignissim volutpat. Phasellus tincidunt sollicitudin posuere. Phasellus tincidunt sollicitudin posuere. Nam tristique feugiat est vitae mollis.,version: 8.39"
+ZADD ztest 67511 "row: 15840, name: Bhupesh Menon,language: Hindi,id: 0CEPNRDV98KT3ORP,bio: Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Maecenas quis nisi nunc.,version: 2.69"
 ```
 Загрузка данных, смотрим slow-log, 567 микросекунд. Сами вставки не попадают, так как в этот момент включен параметр slowlog-log-slower-than 100. Оценим это время по другому далее
 ```sh
