@@ -107,6 +107,14 @@ OK
 Вычитать список ключей test, 5583 микросекунд
 ```sh
 127.0.0.1:6379> KEYS test*
+    1) "test:11041"
+    2) "test:4411"
+...
+15839) "test:6984"
+15840) "test:25"
+
+1738258316.255652 [0 127.0.0.1:45436] "KEYS" "test*"
+
 
 127.0.0.1:6379> SLOWLOG GET
 1) 1) (integer) 30
@@ -142,9 +150,9 @@ echo 'keys test*' | redis-cli | sed 's/^/get /' | redis-cli
    4) 1) "COMMAND"
    5) "127.0.0.1:37574"
    6) ""
-
 ```
-Просто прочитать одно значение, не попадает под фильтр медленного запроса, только команда авторизации (проверено даже со значением slowlog-log-slower-than 10)
+
+Просто прочитать одно значение 7 микросек, попадает под фильтр медленного запроса, только со значением slowlog-log-slower-than 1
 ```sh
 ~# redis-cli
 127.0.0.1:6379> GET test:12345
@@ -152,17 +160,39 @@ echo 'keys test*' | redis-cli | sed 's/^/get /' | redis-cli
 
 127.0.0.1:6379> MONITOR
 OK
-1738232490.023402 [0 127.0.0.1:39644] "COMMAND"
-1738232505.014487 [0 127.0.0.1:39644] "GET" "test:12345"
+1738258080.369228 [0 127.0.0.1:59756] "GET" "test:12345"
 
-127.0.0.1:6379> SLOWLOG GET
-1) 1) (integer) 77
-   2) (integer) 1738232490
-   3) (integer) 540
-   4) 1) "COMMAND"
-   5) "127.0.0.1:39644"
+3) 1) (integer) 0
+   2) (integer) 1738257992
+   3) (integer) 7
+   4) 1) "GET"
+      2) "test:12345"
+   5) "127.0.0.1:59756"
    6) ""
 ```
+
+Добавить вручную еще один ключ, 12 микросек
+```sh
+127.0.0.1:6379> SET test:15841 "name: Bhupesh Menon,language: Hindi,id: 0CEPNRDV98KT3ORP,bio: Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Maecenas quis nisi nunc.,version: 2.69"
+OK
+
+127.0.0.1:6379> MONITOR
+OK
+1738257825.690265 [0 127.0.0.1:48156] "SET" "test:15841" "name: Bhupesh Menon,language: Hindi,id: 0CEPNRDV98KT3ORP,bio: Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Maecenas quis nisi nunc.,version: 2.69"
+
+
+127.0.0.1:6379> SLOWLOG GET
+1) 1) (integer) 886
+   2) (integer) 1738257825
+   3) (integer) 12
+   4) 1) "SET"
+      2) "test:15841"
+      3) "name: Bhupesh Menon,language: Hindi,id: 0CEPNRDV98KT3ORP,bio: Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligu... (165 more bytes)"
+   5) "127.0.0.1:48156"
+   6) ""
+
+```
+
 
 ### Хэш-таблицы
 Теперь аналогично подготовим файл данных в виде хэш-таблицы
@@ -216,17 +246,25 @@ OK
 1738167624.612018 [0 127.0.0.1:52570] "HSET" "htest:15840" "name" "Bhupesh Menon" "language" "Hindi" "id" "0CEPNRDV98KT3ORP" "bio" "Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Maecenas quis nisi nunc." "version" "2.69"
 
 ```
-Вычитать список ключей htest, 9041 микросекунд
+Вычитать список ключей htest, 6414 микросекунд
 ```sh
 127.0.0.1:6379> KEYS htest*
+    1) "htest:4010"
+    2) "htest:12764"
+    3) "htest:9908"
+...
+15839) "htest:7782"
+15840) "htest:8966"
+
+1738258484.121056 [0 127.0.0.1:59756] "KEYS" "htest*"
 
 127.0.0.1:6379> SLOWLOG GET
-1) 1) (integer) 59
-   2) (integer) 1738166766
-   3) (integer) 9041
+1) 1) (integer) 45186
+   2) (integer) 1738258484
+   3) (integer) 6414
    4) 1) "KEYS"
       2) "htest*"
-   5) "127.0.0.1:48424"
+   5) "127.0.0.1:59756"
    6) ""
 ```
 Прочитать все значения HVALS всех ключей htest*, зафиксированы такие действия, 6483 микросекунд
@@ -271,6 +309,66 @@ OK
    5) "127.0.0.1:60580"
    6) ""
 ```
+Получить пары ключ-значений по элементу, 11 микросек
+```sh
+127.0.0.1:6379> HGETALL htest:12345
+ 1) "language"
+ 2) "Maltese"
+ 3) "bio"
+ 4) "Maecenas tempus neque ut porttitor malesuada. Curabitur ultricies id urna nec ultrices."
+ 5) "id"
+ 6) "BJRF0BWIHJ0Q12A1"
+ 7) "name"
+ 8) "Maria Sammut"
+ 9) "version"
+10) "6.83"
+
+127.0.0.1:6379> MONITOR
+OK
+1738257357.545648 [0 127.0.0.1:48156] "HGETALL" "htest:12345"
+
+127.0.0.1:6379> SLOWLOG GET
+1) 1) (integer) 824
+   2) (integer) 1738257357
+   3) (integer) 11
+   4) 1) "HGETALL"
+      2) "htest:12345"
+   5) "127.0.0.1:48156"
+   6) ""
+
+```
+
+Добавить вручную еще один ключ, 20 микросек
+```sh
+127.0.0.1:6379> HSET htest:15841 "name" "Bhupesh Menon" "language" "Hindi" "id" "0CEPNRDV98KT3ORP" "bio" "Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Maecenas quis nisi nunc." "version" 2.69
+(integer) 5
+
+127.0.0.1:6379> MONITOR
+OK
+1738257165.397728 [0 127.0.0.1:48156] "HSET" "htest:15841" "name" "Bhupesh Menon" "language" "Hindi" "id" "0CEPNRDV98KT3ORP" "bio" "Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Maecenas quis nisi nunc." "version" "2.69"
+
+127.0.0.1:6379> SLOWLOG RESET
+OK
+127.0.0.1:6379> SLOWLOG GET
+1) 1) (integer) 822
+   2) (integer) 1738257165
+   3) (integer) 20
+   4)  1) "HSET"
+       2) "htest:15841"
+       3) "name"
+       4) "Bhupesh Menon"
+       5) "language"
+       6) "Hindi"
+       7) "id"
+       8) "0CEPNRDV98KT3ORP"
+       9) "bio"
+      10) "Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisqu... (89 more bytes)"
+      11) "version"
+      12) "2.69"
+   5) "127.0.0.1:48156"
+   6) ""
+```
+
 
 ### Список
 Сделаем файлик для структур данных список
@@ -327,6 +425,23 @@ OK
 ```
 то есть почти полторы секунды (1,33)
 
+Посмотреть наличие списка rtest по шаблону, 7 микросекунд
+```sh
+127.0.0.1:6379> KEYS rtest*
+1) "rtest"
+
+1738258666.751310 [0 127.0.0.1:59756] "KEYS" "rtest*"
+
+127.0.0.1:6379> SLOWLOG GET
+1) 1) (integer) 60750
+   2) (integer) 1738258666
+   3) (integer) 7
+   4) 1) "KEYS"
+      2) "rtest*"
+   5) "127.0.0.1:59756"
+   6) ""
+```
+
 Длина списка, 728 микросекунд
 ```sh
 127.0.0.1:6379> LLEN rtest
@@ -377,6 +492,48 @@ OK
       2) "rtest"
       3) "12345"
    5) "127.0.0.1:52642"
+   6) ""
+```
+Получить срез списка - один элемент
+```sh
+127.0.0.1:6379> LRANGE rtest 12345 12345
+1) "name: Rita Busuttil,language: Maltese,id: 1QLMU6QZ7EYUNNZV,bio: Phasellus tincidunt sollicitudin posuere. Quisque efficitur vel sapien ut imperdiet. Vestibulum pharetra libero et velit gravida euismod. Maecenas tempus neque ut porttitor malesuada.,version: 2.09"
+
+127.0.0.1:6379> MONITOR
+OK
+1738256800.201498 [0 127.0.0.1:48156] "LRANGE" "rtest" "12345" "12345"
+
+127.0.0.1:6379> SLOWLOG GET
+1) 1) (integer) 184
+   2) (integer) 1738256800
+   3) (integer) 63
+   4) 1) "LRANGE"
+      2) "rtest"
+      3) "12345"
+      4) "12345"
+   5) "127.0.0.1:48156"
+   6) ""
+```
+
+Добавление вручную еще одного элемента, 13 микросек.
+```sh
+127.0.0.1:6379> RPUSH rtest "name: Bhupesh Menon,language: Hindi,id: 0CEPNRDV98KT3ORP,bio: Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Maecenas quis nisi nunc.,version: 2.70"
+(integer) 15841
+
+127.0.0.1:6379> MONITOR
+OK
+1738256671.654819 [0 127.0.0.1:48156] "RPUSH" "rtest" "name: Bhupesh Menon,language: Hindi,id: 0CEPNRDV98KT3ORP,bio: Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Maecenas quis nisi nunc.,version: 2.70"
+
+127.0.0.1:6379> SLOWLOG RESET
+OK
+127.0.0.1:6379> SLOWLOG GET
+1) 1) (integer) 182
+   2) (integer) 1738256671
+   3) (integer) 13
+   4) 1) "RPUSH"
+      2) "rtest"
+      3) "name: Bhupesh Menon,language: Hindi,id: 0CEPNRDV98KT3ORP,bio: Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligu... (165 more bytes)"
+   5) "127.0.0.1:48156"
    6) ""
 ```
 
@@ -436,14 +593,53 @@ OK
 1738252413.882734 [0 127.0.0.1:39280] "ZADD" "ztest" "67511" "row: 15840, name: Bhupesh Menon,language: Hindi,id: 0CEPNRDV98KT3ORP,bio: Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Maecenas quis nisi nunc.,version: 2.69"
 ```
 
+Посмотреть наличие множества ztest по шаблону, 7 микросекунд
+```sh
+127.0.0.1:6379> KEYS ztest*
+1) "ztest"
 
-Команда посмотреть кол-во, не попадает в лог медленных операций
+1738259050.902831 [0 127.0.0.1:59756] "KEYS" "ztest*"
+
+127.0.0.1:6379> SLOWLOG GET
+1) 1) (integer) 76597
+   2) (integer) 1738259050
+   3) (integer) 7
+   4) 1) "KEYS"
+      2) "ztest*"
+   5) "127.0.0.1:59756"
+   6) ""
+
 ```
+
+Команды: посмотреть мощность и кол-во упорядоченного множества, попадают в лог медленных операций со значением параметра slowlog-log-slower-than 10, соответственно 11 и 33 микросек.
+```sh
 127.0.0.1:6379> ZCARD ztest
 (integer) 15840
 
+127.0.0.1:6379> SLOWLOG GET
+1) 1) (integer) 5
+   2) (integer) 1738256146
+   3) (integer) 11
+   4) 1) "ZCARD"
+      2) "ztest"
+   5) "127.0.0.1:48156"
+   6) ""
+
+
 127.0.0.1:6379> ZCOUNT ztest 0 99999
 (integer) 15840
+
+127.0.0.1:6379> SLOWLOG GET
+1) 1) (integer) 7
+   2) (integer) 1738256258
+   3) (integer) 33
+   4) 1) "ZCOUNT"
+      2) "ztest"
+      3) "0"
+      4) "99999"
+   5) "127.0.0.1:48156"
+   6) ""
+
 ```
 
 Получить все элементы с ранжированием, 1.62 секунды
@@ -486,4 +682,24 @@ OK
       5) "WITHSCORES"
    5) "127.0.0.1:48156"
    6) ""
+```
+Добавить вручную еще одно значение, 41 микросекунда
+```sh
+127.0.0.1:6379> ZADD ztest 67512 "row: 15841, name: Bhupesh Menon,language: Hindi,id: 0CEPNRDV98KT3ORP,bio: Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Maecenas quis nisi nunc.,version: 2.69"
+(integer) 1
 
+127.0.0.1:6379> MONITOR
+OK
+1738255961.383747 [0 127.0.0.1:48156] "ZADD" "ztest" "67512" "row: 15841, name: Bhupesh Menon,language: Hindi,id: 0CEPNRDV98KT3ORP,bio: Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Maecenas quis nisi nunc.,version: 2.69"
+
+127.0.0.1:6379> SLOWLOG GET
+1) 1) (integer) 3
+   2) (integer) 1738255961
+   3) (integer) 41
+   4) 1) "ZADD"
+      2) "ztest"
+      3) "67512"
+      4) "row: 15841, name: Bhupesh Menon,language: Hindi,id: 0CEPNRDV98KT3ORP,bio: Maecenas tempus neque ut porttitor malesuada. Phasellu... (177 more bytes)"
+   5) "127.0.0.1:48156"
+   6) ""
+```
