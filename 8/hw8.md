@@ -81,7 +81,7 @@ slowlog-log-slower-than 100
 # systemctl restart redis
 ```
 
-Загрузка строк, смотрим slow-log, 713 микросекунд
+Загрузка строк, смотрим slow-log, 713 микросекунд. Сами вставки не попадают, так как в этот момент включен параметр slowlog-log-slower-than 100. Оценим это время по другому далее
 ```sh
 redis-cli < redis/set_result
 
@@ -224,7 +224,7 @@ HSET htest:2 "name" "Afzal Ghaffar" "language" "Sindhi" "id" "ENTOCR13RSCLZ6KU" 
 HSET htest:3 "name" "Aamir Solangi" "language" "Sindhi" "id" "IAKPO3R4761JDRVG" "bio" "Vestibulum pharetra libero et velit gravida euismod. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Fusce eu ultrices elit, vel posuere neque." "version" 7.27
 ```
 
-Загрузка хэш-таблиц, смотрим slow-log, 783 микросекунд
+Загрузка хэш-таблиц, смотрим slow-log, 783 микросекунд. Сами вставки не попадают, так как в этот момент включен параметр slowlog-log-slower-than 100. Оценим это время по другому далее
 ```sh
 redis-cli < redis/hset_result
 
@@ -384,7 +384,7 @@ RPUSH rtest "name: Aamir Solangi,language: Sindhi,id: IAKPO3R4761JDRVG,bio: Vest
 ```
 Скрипт для данных структур не нужен, будем вставлять новые значения просто в конец списка rtest
 
-Загрузка cписка, смотрим slow-log, 968 микросекунд на саму команду со значением slowlog-log-slower-than 100, также пара длинных вставок вышла за этот лимит и также отображается в логе.
+Загрузка cписка, смотрим slow-log, 968 микросекунд на саму команду со значением slowlog-log-slower-than 100, также пара длинных вставок вышла за этот лимит и также отображается в логе. Скорость всего импорта оценим далее
 ```sh
 redis-cli < redis/rpush_result
 
@@ -569,7 +569,7 @@ done
 
 redis/.scr_z.sh
 ```
-Загрузка данных, смотрим slow-log, 567 микросекунд
+Загрузка данных, смотрим slow-log, 567 микросекунд. Сами вставки не попадают, так как в этот момент включен параметр slowlog-log-slower-than 100. Оценим это время по другому далее
 ```sh
 redis-cli < redis/zadd_result
 
