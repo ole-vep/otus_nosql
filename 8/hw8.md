@@ -710,12 +710,10 @@ OK
 ```
 
 ## Redis CLuster
-Поднимем три вм в яндекс облаке
+Создадим три виртуальные машины в яндекс облаке
 ```sh
 #yc compute instance create redis1 --ssh-key .ssh/id_rsa.pub --create-boot-disk image-folder-id=standard-images,image-family=ubuntu-2204-lts,size=30 --network-interface subnet-name=default-ru-central1-d,nat-ip-version=ipv4 --memory 4G --cores 2 --zone ru-central1-d --hostname redis1
-
 #yc compute instance create redis2 --ssh-key .ssh/id_rsa.pub --create-boot-disk image-folder-id=standard-images,image-family=ubuntu-2204-lts,size=30 --network-interface subnet-name=default-ru-central1-d,nat-ip-version=ipv4 --memory 4G --cores 2 --zone ru-central1-d --hostname redis2
-
 #yc compute instance create redis3 --ssh-key .ssh/id_rsa.pub --create-boot-disk image-folder-id=standard-images,image-family=ubuntu-2204-lts,size=30 --network-interface subnet-name=default-ru-central1-d,nat-ip-version=ipv4 --memory 4G --cores 2 --zone ru-central1-d --hostname redis3
 
 #yc compute instance list
@@ -728,7 +726,7 @@ OK
 +----------------------+----------+---------------+---------+----------------+-------------+
 
 ```
-Заходим на машину, сделаем подготовки, установим редис, остановим созданный сервис
+Заходим на машину, сделаем подготовки, установим redis, остановим созданный сервис
 ```sh
 #ssh yc-user@158.160.149.79
 
@@ -738,11 +736,11 @@ sudo apt-get install redis-server
 sudo systemctl disable redis-server.service
 sudo systemctl stop redis-server.service
 ```
-Создадим свои сервисы редиса по два на каждую машину.
+Создадим свои сервисы redis по два на каждую машину.
 Забиндим общение между службами по внутренним ip-адресам.
-На первой машинки создадим сервисы редиса на портах 6379 и 6380, каждый со своим конфигом с пометкой порта
+На первой машинке создадим сервисы redis на портах 6379 и 6380, каждый со своим конфигом с пометкой порта
 
-Для redis на порту 6379:
+Для redis на порту 6379, например:
 ```sh
 sudo mkdir /var/lib/redis/6379
 chown redis:redis -R /var/lib/redis/6379/
@@ -784,7 +782,7 @@ WantedBy=multi-user.target
 systemctl daemon-reload
 systemctl start redis_6379.service
 ```
-Для redis на порту 6380
+Для redis на порту 6380, аналогично
 ```sh
 sudo mkdir /var/lib/redis/6380
 chown redis:redis -R /var/lib/redis/6380/
@@ -824,7 +822,7 @@ WantedBy=multi-user.target
 #
 systemctl start redis_6380.service
 ```
-В логе Редис 6379 примерно такая картина
+В логе redis на порту 6379 такая картина
 ```
 18702:M 31 Jan 2025 16:31:58.668 # User requested shutdown...
 18702:M 31 Jan 2025 16:31:58.668 * Calling fsync() on the AOF file.
@@ -843,7 +841,7 @@ systemctl start redis_6380.service
 19023:M 31 Jan 2025 16:31:58.683 # Server initialized
 19023:M 31 Jan 2025 16:31:58.684 * Ready to accept connections
 ```
-На других двух машинах redis2 и redi3 установим redis и создадим аналогично по два сервиса 
+На других двух машинах redis2 и redis3 установим redis и создадим аналогично по два сервиса 
 на машине redis2 10.130.0.3  на портах 6381 и 6382
 на машине redis3 10.130.0.16 на портах 6383 и 6384
 
