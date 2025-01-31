@@ -412,7 +412,7 @@ redis-cli < redis/rpush_result
    5) "127.0.0.1:46822"
    6) ""
 ```
-Монитор выдаёт такую картину:
+Монитор выдаёт такую картину, 1.33 секунды 
 ```sh
 127.0.0.1:6379> MONITOR
 OK
@@ -423,7 +423,6 @@ OK
 1738234690.052485 [0 127.0.0.1:46822] "RPUSH" "rtest" "name: Bhupesh Menon,language: Hindi,id: 0CEPNRDV98KT3ORP,bio: Maecenas tempus neque ut porttitor malesuada. Phasellus massa ligula, hendrerit eget efficitur eget, tincidunt in ligula. Quisque mauris ligula, efficitur porttitor sodales ac, lacinia non ex. Maecenas quis nisi nunc.,version: 2.69"
 
 ```
-то есть почти полторы секунды (1,33)
 
 Посмотреть наличие списка rtest по шаблону, 7 микросекунд
 ```sh
@@ -494,7 +493,7 @@ OK
    5) "127.0.0.1:52642"
    6) ""
 ```
-Получить срез списка - один элемент
+Получить срез списка - один элемент, 63 микросек.
 ```sh
 127.0.0.1:6379> LRANGE rtest 12345 12345
 1) "name: Rita Busuttil,language: Maltese,id: 1QLMU6QZ7EYUNNZV,bio: Phasellus tincidunt sollicitudin posuere. Quisque efficitur vel sapien ut imperdiet. Vestibulum pharetra libero et velit gravida euismod. Maecenas tempus neque ut porttitor malesuada.,version: 2.09"
