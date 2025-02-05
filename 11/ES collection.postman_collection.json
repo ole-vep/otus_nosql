@@ -1,0 +1,133 @@
+{
+	"info": {
+		"_postman_id": "4b5cfe73-8ad1-49eb-b0ad-a67d1b1a3e7e",
+		"name": "ES collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "23876935"
+	},
+	"item": [
+		{
+			"name": "mapping",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": {
+						"password": "VRdAM6CahTstBhEZN38Z",
+						"username": "elastic"
+					}
+				},
+				"method": "GET",
+				"header": [],
+				"url": "https://localhost:9200/rama/_mapping/"
+			},
+			"response": []
+		},
+		{
+			"name": "PUT",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": {
+						"password": "VRdAM6CahTstBhEZN38Z",
+						"username": "elastic"
+					}
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"settings\": {\r\n        \"analysis\": {\r\n            \"filter\": {\r\n                \"ru_stop\": {\r\n                    \"type\": \"stop\",\r\n                    \"stopwords\": \"_russian_\"\r\n                },\r\n                \"ru_stemmer\": {\r\n                    \"type\": \"stemmer\",\r\n                    \"language\": \"russian\"\r\n                }\r\n            },\r\n            \"analyzer\": {\r\n                \"my_russian\": {\r\n                    \"tokenizer\": \"standard\",\r\n                    \"filter\": [\r\n                        \"lowercase\",\r\n                        \"ru_stop\",\r\n                        \"ru_stemmer\"\r\n                    ]\r\n                }\r\n            }\r\n        }\r\n    },\r\n    \"mappings\": {\r\n        \"properties\": {\r\n            \"content\": {\r\n                \"type\": \"text\",\r\n                \"analyzer\": \"my_russian\"\r\n            }\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "https://localhost:9200/rama"
+			},
+			"response": []
+		},
+		{
+			"name": "search",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": {
+						"password": "VRdAM6CahTstBhEZN38Z",
+						"username": "elastic"
+					}
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"query\": {\r\n        \"match\": {\r\n            \"content\": {\r\n                \"query\":\"мама ела сосиску\",\r\n                \"fuzziness\":\"auto\"\r\n            }\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "https://localhost:9200/rama/_search"
+			},
+			"response": []
+		},
+		{
+			"name": "POST",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": {
+						"password": "VRdAM6CahTstBhEZN38Z",
+						"username": "elastic"
+					}
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"content\": \"мыло раме\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "https://localhost:9200/rama/_doc/"
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": {
+			"password": "VRdAM6CahTstBhEZN38Z",
+			"username": "elastic"
+		}
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
