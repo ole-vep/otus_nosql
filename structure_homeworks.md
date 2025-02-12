@@ -409,7 +409,7 @@ Kafka
 
 Выполнение: [homework14](https://github.com/ole-vep/otus_nosql/blob/main/14/hw14.md)
 
-### 15. Работа с tarantool
+### 15. Работа с Tarantool
 Домашнее задание
 Работа с Tarantool
 
