@@ -1,4 +1,5 @@
 ## Redis
+
 Установка на Ubuntu 22.04
 ```sh
 # sudo apt update
