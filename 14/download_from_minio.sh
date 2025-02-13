@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Example: ./download_minio.sh example.url.com username password bucket-name minio/path/to/file.txt /download/path/to/file.txt
+# Example: ./download_from_minio.sh example.url.com username password bucket-name minio/path/to/file.txt /download/path/to/file.txt
 
 if [ -z $1 ]; then
   echo "You have NOT specified a MINIO URL!"
