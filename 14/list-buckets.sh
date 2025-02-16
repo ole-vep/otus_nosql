@@ -25,7 +25,7 @@ MINIO_PATH="/"
 
 # Static Vars
 DATE=$(date -R --utc)
-CONTENT_TYPE='application/zstd'
+CONTENT_TYPE='any/example'
 SIG_STRING="GET\n\n${CONTENT_TYPE}\n${DATE}\n${MINIO_PATH}"
 SIGNATURE=`echo -en ${SIG_STRING} | openssl sha1 -hmac ${PASSWORD} -binary | base64`
 PROTOCOL="http"
